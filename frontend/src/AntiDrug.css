@@ -4,6 +4,7 @@
 #root:has(.qr-stat-card) {
   width: 100%;
   max-width: 100%;
+  
   border: none;
   padding: 0;
 }
