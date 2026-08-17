@@ -1209,8 +1209,8 @@ function AntiDrugForm() {
           background: rgba(13, 27, 62, 0.75);
           backdrop-filter: blur(10px);
           display: flex;
-          align-items: center;
-          justify-content: center;
+          align-items: flex-start;
+          overflow-y: auto;
           z-index: 2000;
           padding: 1.5rem;
         }
@@ -1218,8 +1218,7 @@ function AntiDrugForm() {
         .campaign-popup-card {
           position: relative;
           width: min(100%, 620px);
-          max-height: 90vh;
-          overflow-y: auto;
+          margin: auto;
           box-sizing: border-box;
           background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(239,246,255,0.97) 100%);
           border: 1px solid rgba(148, 163, 184, 0.45);
