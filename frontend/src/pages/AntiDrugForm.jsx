@@ -602,6 +602,8 @@ function AntiDrugForm() {
   const [showPopup, setShowPopup] = useState(true);
   const [isRobotChecked, setIsRobotChecked] = useState(false);
   const [recaptchaLoading, setRecaptchaLoading] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
   const [honeypot, setHoneypot] = useState('');
   const [showCertModal, setShowCertModal] = useState(false);
   const [certStage, setCertStage] = useState('processing');
@@ -703,14 +705,45 @@ function AntiDrugForm() {
     };
   }, []);
 
-  const handleRecaptchaClick = () => {
-    if (isRobotChecked || recaptchaLoading) return;
-    setRecaptchaLoading(true);
-    setTimeout(() => {
-      setRecaptchaLoading(false);
-      setIsRobotChecked(true);
-    }, 1200);
-  };
+  useEffect(() => {
+    const scriptId = 'google-recaptcha-script';
+    let script = document.getElementById(scriptId);
+
+    window.onRecaptchaLoad = () => {
+      if (window.grecaptcha && recaptchaRef.current) {
+        try {
+          window.grecaptcha.render(recaptchaRef.current, {
+            sitekey: import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LdToIUtAAAAAFkhV5yawaGG9Wz5nbOzpcp2NtJH',
+            callback: (token) => {
+              setRecaptchaToken(token);
+              setIsRobotChecked(true);
+            },
+            'expired-callback': () => {
+              setRecaptchaToken(null);
+              setIsRobotChecked(false);
+            },
+            'error-callback': () => {
+              setRecaptchaToken(null);
+              setIsRobotChecked(false);
+            }
+          });
+        } catch (e) {
+          console.error("grecaptcha render error:", e);
+        }
+      }
+    };
+
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    } else if (window.grecaptcha && window.grecaptcha.render) {
+      window.onRecaptchaLoad();
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -760,6 +793,7 @@ function AntiDrugForm() {
         ...formData,
         websiteEmail: honeypot,
         isRobotChecked: isRobotChecked,
+        recaptchaToken: recaptchaToken,
         websiteSource: typeof window !== 'undefined' ? window.location.hostname : 'bothaiellatamilnadu.in'
       };
 
@@ -782,10 +816,19 @@ function AntiDrugForm() {
       } else {
         setError(data.message || 'Submission failed. Please try again.');
         setIsRobotChecked(false);
+        setRecaptchaToken(null);
+        if (window.grecaptcha) {
+          window.grecaptcha.reset();
+        }
       }
     } catch (err) {
       console.error('Anti-Drug submission error:', err);
       setError('Server error. Please try again later.');
+      setIsRobotChecked(false);
+      setRecaptchaToken(null);
+      if (window.grecaptcha) {
+        window.grecaptcha.reset();
+      }
     } finally {
       setLoading(false);
     }
@@ -824,6 +867,10 @@ function AntiDrugForm() {
     setError(null);
     setFieldErrors({});
     setIsRobotChecked(false);
+    setRecaptchaToken(null);
+    if (window.grecaptcha) {
+      window.grecaptcha.reset();
+    }
   };
 
   return (
@@ -1054,7 +1101,8 @@ function AntiDrugForm() {
         .anti-submit-button {
           border: none;
           border-radius: 0.9rem;
-          background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+          background: #15803d;
+          color: white;
           transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
           will-change: transform;
           letter-spacing: 0.01em;
@@ -1062,6 +1110,7 @@ function AntiDrugForm() {
 
         .submit-button:hover,
         .anti-submit-button:hover {
+          background: #166534;
           transform: translateY(-2px);
           box-shadow: 0 18px 24px rgba(5, 150, 105, 0.18);
           filter: brightness(1.04);
@@ -1599,6 +1648,50 @@ function AntiDrugForm() {
           line-height: 1.4 !important;
         }
 
+        .security-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin: 1.5rem 0 0.5rem;
+          font-size: 15px;
+          font-weight: bold;
+          color: #1f2937;
+        }
+        .tamil-badge-security {
+          font-size: 12px;
+          font-weight: normal;
+          color: #047857;
+          background-color: #d1fae5;
+          border: 1px solid #a7f3d0;
+          border-radius: 12px;
+          padding: 2px 8px;
+        }
+        .acknowledgement {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+        }
+        .acknowledgement-container {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          flex: 1;
+          min-width: 0;
+          word-break: break-word;
+          overflow-wrap: break-word;
+        }
+        .acknowledgement-text-tamil {
+          font-size: 15px;
+          font-weight: bold;
+          color: #1f2937;
+          line-height: 1.4;
+        }
+        .acknowledgement-text-english {
+          font-size: 13px;
+          color: #6b7280;
+          line-height: 1.4;
+        }
+
         /* Mobile specific fixes to override padding and card widths */
         @media (max-width: 576px) {
           .field-label > span {
@@ -1608,6 +1701,41 @@ function AntiDrugForm() {
           .tamil-badge {
             font-size: 0.72rem !important;
             padding: 0.15rem 0.5rem !important;
+          }
+          .security-header {
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+            font-size: 13px !important;
+            margin: 1rem 0 0.35rem !important;
+          }
+          .security-header span {
+            font-size: 13px !important;
+          }
+          .security-header .tamil-badge-security {
+            font-size: 10px !important;
+            padding: 1px 6px !important;
+          }
+          .recaptcha-wrapper {
+            margin: 0.5rem 0 1rem !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            width: 100% !important;
+            overflow: visible !important;
+          }
+          .recaptcha-wrapper > div {
+            transform: scale(0.82) !important;
+            transform-origin: center !important;
+          }
+          .acknowledgement {
+            padding: 0.85rem !important;
+            gap: 8px !important;
+          }
+          .acknowledgement-text-tamil {
+            font-size: 13px !important;
+          }
+          .acknowledgement-text-english {
+            font-size: 11px !important;
           }
         }
       `}</style>
@@ -1988,38 +2116,32 @@ function AntiDrugForm() {
                 />
               </div>
 
-              <div className="recaptcha-wrapper">
-                <div className="recaptcha-card">
-                  <div className="recaptcha-left" onClick={handleRecaptchaClick}>
-                    <div className={`recaptcha-checkbox-container ${isRobotChecked ? 'checked' : ''}`}>
-                      {recaptchaLoading ? (
-                        <div className="recaptcha-spinner"></div>
-                      ) : isRobotChecked ? (
-                        <i className="bi bi-check-lg recaptcha-checkmark"></i>
-                      ) : null}
-                    </div>
-                    <span className="recaptcha-label">I'm not a robot / நான் ஒரு ரோபோ அல்ல</span>
-                  </div>
-                  <div className="recaptcha-right">
-                    <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="recaptcha" width="30" height="30" />
-                    <span className="recaptcha-links">
-                      <a href="https://www.google.com/recaptcha/intro/v3.html" target="_blank" rel="noreferrer">reCAPTCHA</a>
-                      <br />
-                      <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Privacy</a> - <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer">Terms</a>
-                    </span>
-                  </div>
-                </div>
+              <div className="security-header">
+                <i className="bi bi-shield-check" style={{ color: '#10b981', fontSize: '18px' }}></i>
+                <span>Security Verification</span>
+                <span className="tamil-badge-security">
+                  பாதுகாப்பு சரிபார்ப்பு
+                </span>
+              </div>
+
+              <div className="recaptcha-wrapper" style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0 1.5rem' }}>
+                <div ref={recaptchaRef}></div>
               </div>
 
               <label className="acknowledgement">
-                <input type="checkbox" name="acknowledgement" checked={formData.acknowledgement} onChange={handleChange} />
-                <span>
-                  I hereby pledge to say <strong style={{ color: '#000' }}>NO to drugs</strong>, spread awareness, and work towards a safe, drug-free Tamil Nadu.
-                </span>
+                <input type="checkbox" name="acknowledgement" checked={formData.acknowledgement} onChange={handleChange} style={{ marginTop: '4px' }} />
+                <div className="acknowledgement-container">
+                  <span className="acknowledgement-text-tamil">
+                    போதைப்பொருள்களுக்கு <span style={{ color: '#dc2626' }}>வேண்டாம்</span> என்று சொல்லவும், விழிப்புணர்வை ஏற்படுத்தவும், பாதுகாப்பான போதையற்ற தமிழகம் உருவாக பாடுபடவும் உறுதியளிக்கிறேன்.
+                  </span>
+                  <span className="acknowledgement-text-english">
+                    I hereby pledge to say <strong style={{ color: '#4b5563' }}>NO to drugs</strong>, spread awareness, and work towards a safe, drug-free Tamil Nadu.
+                  </span>
+                </div>
               </label>
 
-              <button type="submit" className="submit-button anti-submit-button" disabled={loading}>
-                <i className="bi bi-send-fill"></i> {loading ? 'Submitting...' : 'Submit Anti-Drug Pledge'}
+              <button type="submit" className="submit-button anti-submit-button" disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                <i className="bi bi-send-fill"></i> {loading ? 'Submitting... / சமர்ப்பிக்கப்படுகிறது...' : 'Submit Anti-Drug Pledge / போதை ஒழிப்பு உறுதிமொழியைச் சமர்ப்பிக்கவும்'}
               </button>
             </form>
           )}
