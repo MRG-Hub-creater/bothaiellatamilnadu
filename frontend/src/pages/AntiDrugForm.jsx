@@ -1528,9 +1528,16 @@ function AntiDrugForm() {
           .recaptcha-wrapper {
             margin: 1rem 0 !important;
             height: 66px !important;
-            display: block !important;
-            text-align: center !important;
+            display: flex !important;
+            justify-content: center !important;
             width: 100% !important;
+            overflow: hidden !important;
+          }
+          .recaptcha-wrapper > div {
+            flex-shrink: 0 !important;
+            width: 304px !important;
+            display: flex !important;
+            justify-content: center !important;
           }
           .recaptcha-card {
             transform: scale(0.86) !important;
@@ -1794,16 +1801,18 @@ function AntiDrugForm() {
           }
           .recaptcha-wrapper {
             margin: 0.5rem 0 1rem !important;
-            display: block !important;
-            text-align: center !important;
+            display: flex !important;
+            justify-content: center !important;
             width: 100% !important;
             overflow: hidden !important;
           }
           .recaptcha-wrapper > div {
-            display: inline-block !important;
+            flex-shrink: 0 !important;
+            width: 304px !important;
             transform: scale(0.85) !important;
-            transform-origin: center !important;
-            margin: 0 auto !important;
+            transform-origin: center center !important;
+            display: flex !important;
+            justify-content: center !important;
           }
           .acknowledgement {
             padding: 0.85rem !important;
