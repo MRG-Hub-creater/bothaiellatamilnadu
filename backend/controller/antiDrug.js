@@ -128,7 +128,8 @@ exports.createSubmission = async (req, res) => {
       acknowledgement, 
       websiteSource,
       websiteEmail, // Honeypot field
-      isRobotChecked
+      isRobotChecked,
+      recaptchaToken
     } = req.body;
 
     // 1. Honeypot check: If the hidden honeypot field is filled, it's a bot submission.
@@ -142,12 +143,35 @@ exports.createSubmission = async (req, res) => {
       });
     }
 
-    // 2. Robot checkbox check
-    if (isRobotChecked !== true && isRobotChecked !== 'true') {
+    // 2. Real Google reCAPTCHA check
+    if (!recaptchaToken) {
       return res.status(400).json({
         success: false,
-        message: "Security verification failed. Please check the 'I'm not a robot' box."
+        message: "Security verification failed. Missing reCAPTCHA token."
       });
+    }
+
+    try {
+      const verifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`;
+      const recaptchaRes = await fetch(verifyUrl, { method: "POST" });
+      const recaptchaData = await recaptchaRes.json();
+
+      if (!recaptchaData.success) {
+        console.error("reCAPTCHA validation failed:", recaptchaData["error-codes"]);
+        return res.status(400).json({
+          success: false,
+          message: "Security verification failed. Invalid reCAPTCHA token."
+        });
+      }
+    } catch (error) {
+      console.error("reCAPTCHA verification error:", error);
+      // Fallback: if Google is down/unreachable, fallback to checkbox verification
+      if (isRobotChecked !== true && isRobotChecked !== 'true') {
+        return res.status(400).json({
+          success: false,
+          message: "Security verification failed. Please try again."
+        });
+      }
     }
 
     // Generate reference code: TN2026{8-digit-number}
