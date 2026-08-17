@@ -1112,9 +1112,41 @@ function AntiDrugForm() {
         }
 
         .input-wrapper {
+          position: relative;
           transition: all 0.25s ease;
           border: 1px solid #dbe2ea;
           background: rgba(255,255,255,0.85);
+        }
+
+        .dynamic-placeholder {
+          position: absolute;
+          left: 50px;
+          top: 50%;
+          transform: translateY(-50%);
+          pointer-events: none;
+          display: flex;
+          align-items: center;
+          white-space: nowrap;
+          z-index: 10;
+          color: #94a3b8;
+          font-size: 14.5px;
+        }
+
+        .dp-desktop { display: block; }
+        .dp-mobile { display: none; }
+
+        @media (max-width: 768px) {
+          .dp-desktop { display: none; }
+          .dp-mobile { 
+            display: flex; 
+            flex-direction: column; 
+            font-size: 11.5px;
+            letter-spacing: -0.2px;
+            line-height: 1.25;
+            white-space: normal;
+          }
+          .dp-tamil { color: #475569; font-weight: 500; }
+          .dp-english { color: #94a3b8; margin-top: 1px; }
         }
 
         .input-wrapper:hover {
@@ -1173,6 +1205,7 @@ function AntiDrugForm() {
         .campaign-popup-backdrop {
           position: fixed;
           inset: 0;
+          box-sizing: border-box;
           background: rgba(13, 27, 62, 0.75);
           backdrop-filter: blur(10px);
           display: flex;
@@ -1185,6 +1218,9 @@ function AntiDrugForm() {
         .campaign-popup-card {
           position: relative;
           width: min(100%, 620px);
+          max-height: 90vh;
+          overflow-y: auto;
+          box-sizing: border-box;
           background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(239,246,255,0.97) 100%);
           border: 1px solid rgba(148, 163, 184, 0.45);
           border-radius: 1.5rem;
@@ -1493,9 +1529,9 @@ function AntiDrugForm() {
           .recaptcha-wrapper {
             margin: 1rem 0 !important;
             height: 66px !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
+            display: block !important;
+            text-align: center !important;
+            width: 100% !important;
           }
           .recaptcha-card {
             transform: scale(0.86) !important;
@@ -1658,6 +1694,12 @@ function AntiDrugForm() {
           width: 100% !important;
         }
 
+        .input-wrapper input::placeholder,
+        .input-wrapper select::placeholder {
+          font-size: 11px !important;
+          letter-spacing: -0.3px;
+        }
+
         .input-icon {
           width: 52px !important;
           min-width: 52px !important;
@@ -1753,15 +1795,16 @@ function AntiDrugForm() {
           }
           .recaptcha-wrapper {
             margin: 0.5rem 0 1rem !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
+            display: block !important;
+            text-align: center !important;
             width: 100% !important;
-            overflow: visible !important;
+            overflow: hidden !important;
           }
           .recaptcha-wrapper > div {
-            transform: scale(0.82) !important;
+            display: inline-block !important;
+            transform: scale(0.85) !important;
             transform-origin: center !important;
+            margin: 0 auto !important;
           }
           .acknowledgement {
             padding: 0.85rem !important;
@@ -2015,7 +2058,16 @@ function AntiDrugForm() {
                 </span>
                 <div className={`input-wrapper ${fieldErrors.name ? 'input-error' : ''}`}>
                   <div className="input-icon"><i className="bi bi-person"></i></div>
-                  <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Enter your full name / உங்கள் முழுப் பெயரை உள்ளிடவும்" />
+                  <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder=" " />
+                  {!formData.name && (
+                    <div className="dynamic-placeholder">
+                      <span className="dp-desktop">Enter your full name / உங்கள் முழுப் பெயரை உள்ளிடவும்</span>
+                      <span className="dp-mobile">
+                        <span className="dp-tamil">உங்கள் முழுப் பெயரை உள்ளிடவும்</span>
+                        <span className="dp-english">Enter your full name</span>
+                      </span>
+                    </div>
+                  )}
                 </div>
                 {fieldErrors.name && <div className="field-error-message">{fieldErrors.name}</div>}
               </label>
@@ -2031,10 +2083,19 @@ function AntiDrugForm() {
                     name="whatsappNumber"
                     value={formData.whatsappNumber}
                     onChange={handleChange}
-                    placeholder="Enter 10-digit WhatsApp number / 10 இலக்க எண்"
+                    placeholder=" "
                     inputMode="numeric"
                     maxLength={10}
                   />
+                  {!formData.whatsappNumber && (
+                    <div className="dynamic-placeholder">
+                      <span className="dp-desktop">Enter 10-digit WhatsApp number / 10 இலக்க எண்</span>
+                      <span className="dp-mobile">
+                        <span className="dp-tamil">10 இலக்க எண்</span>
+                        <span className="dp-english">Enter 10-digit WhatsApp number</span>
+                      </span>
+                    </div>
+                  )}
                 </div>
                 {fieldErrors.whatsappNumber && <div className="field-error-message">{fieldErrors.whatsappNumber}</div>}
               </label>
@@ -2045,7 +2106,16 @@ function AntiDrugForm() {
                 </span>
                 <div className={`input-wrapper ${fieldErrors.email ? 'input-error' : ''}`}>
                   <div className="input-icon"><i className="bi bi-envelope"></i></div>
-                  <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Enter your email address / மின்னஞ்சல் முகவரி" />
+                  <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder=" " />
+                  {!formData.email && (
+                    <div className="dynamic-placeholder">
+                      <span className="dp-desktop">Enter your email address / மின்னஞ்சல் முகவரி</span>
+                      <span className="dp-mobile">
+                        <span className="dp-tamil">மின்னஞ்சல் முகவரி</span>
+                        <span className="dp-english">Enter your email address</span>
+                      </span>
+                    </div>
+                  )}
                 </div>
                 {fieldErrors.email && <div className="field-error-message">{fieldErrors.email}</div>}
               </label>
@@ -2075,7 +2145,7 @@ function AntiDrugForm() {
                         <i className="bi bi-search"></i>
                         <input
                           type="text"
-                          placeholder="Search district / மாவட்டத்தைத் தேடவும்..."
+                          placeholder="Search / தேடுக..."
                           value={districtSearch}
                           onChange={(e) => setDistrictSearch(e.target.value)}
                           autoFocus
@@ -2146,10 +2216,19 @@ function AntiDrugForm() {
                       setFilteredPlaces(currentAvailablePlaces.filter(p => p.toLowerCase().includes(formData.place.toLowerCase())));
                       setShowPlacesDropdown(true);
                     }}
-                    placeholder="Enter village, area or city / கிராமம், பகுதி அல்லது ஊர்"
+                    placeholder=" "
                     autoComplete="off"
                     style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', border: 'none', background: 'transparent', outline: 'none' }}
                   />
+                  {!formData.place && (
+                    <div className="dynamic-placeholder" style={{ left: '50px' }}>
+                      <span className="dp-desktop">Enter village, area or city / கிராமம், பகுதி அல்லது ஊர்</span>
+                      <span className="dp-mobile">
+                        <span className="dp-tamil">கிராமம், பகுதி அல்லது ஊர்</span>
+                        <span className="dp-english">Enter village, area or city</span>
+                      </span>
+                    </div>
+                  )}
                   
                   {/* Dropdown for Places */}
                   {showPlacesDropdown && filteredPlaces.length > 0 && (
@@ -2206,7 +2285,7 @@ function AntiDrugForm() {
                 </span>
               </div>
 
-              <div className="recaptcha-wrapper" style={{ display: 'flex', justifyContent: 'center', margin: '0.5rem 0 1.5rem' }}>
+              <div className="recaptcha-wrapper">
                 <div ref={recaptchaRef}></div>
               </div>
 
@@ -2222,8 +2301,14 @@ function AntiDrugForm() {
                 </div>
               </label>
 
-              <button type="submit" className="submit-button anti-submit-button" disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                <i className="bi bi-send-fill"></i> {loading ? 'Submitting... / சமர்ப்பிக்கப்படுகிறது...' : 'Submit Anti-Drug Pledge / போதை ஒழிப்பு உறுதிமொழியைச் சமர்ப்பிக்கவும்'}
+              <button type="submit" className="submit-button anti-submit-button" disabled={loading} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px', padding: '0.9rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                  <i className="bi bi-send-fill"></i>
+                  <span>{loading ? 'Submitting...' : 'Submit Pledge'}</span>
+                </div>
+                <span style={{ fontSize: '0.85rem', fontWeight: 500, opacity: 0.9 }}>
+                  {loading ? 'சமர்ப்பிக்கப்படுகிறது...' : 'உறுதிமொழியைச் சமர்ப்பிக்கவும்'}
+                </span>
               </button>
             </form>
           )}
