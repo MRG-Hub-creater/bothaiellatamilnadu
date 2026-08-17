@@ -610,6 +610,11 @@ function AntiDrugForm() {
   const [districtSearch, setDistrictSearch] = useState('');
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
   const districtRef = useRef(null);
+  
+  const [placesByDistrict, setPlacesByDistrict] = useState({});
+  const [showPlacesDropdown, setShowPlacesDropdown] = useState(false);
+  const [filteredPlaces, setFilteredPlaces] = useState([]);
+  const placeRef = useRef(null);
 
   const CERTIFICATE_REF_ID = 'TN202647763457';
   const WHATSAPP_CERTIFICATE_URL = `https://wa.me/919876543210?text=${encodeURIComponent(
@@ -628,6 +633,20 @@ function AntiDrugForm() {
       ...prev,
       [name]: type === 'checkbox' ? checked : finalValue
     }));
+
+    if (name === 'place') {
+      const currentAvailablePlaces = placesByDistrict[formData.district] || [];
+      const filtered = currentAvailablePlaces.filter(p => 
+        p.toLowerCase().includes(finalValue.toLowerCase())
+      );
+      setFilteredPlaces(filtered);
+      setShowPlacesDropdown(true);
+    }
+
+    if (name === 'district') {
+       setFilteredPlaces([]);
+       setShowPlacesDropdown(false);
+    }
 
     if (fieldErrors[name]) {
       setFieldErrors((prev) => ({
@@ -649,6 +668,20 @@ function AntiDrugForm() {
 
     return 'http://localhost:5000';
   })();
+
+  const fetchPlaces = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/antidrug/places`);
+      const data = await res.json();
+      if (data && data.success && data.data) {
+        setPlacesByDistrict(data.data);
+        return data.data;
+      }
+    } catch (err) {
+      console.error("Error fetching Anti-Drug places:", err);
+    }
+    return placesByDistrict;
+  };
 
   const fetchPledgeCount = async () => {
     try {
@@ -697,6 +730,9 @@ function AntiDrugForm() {
     const handleClickOutside = (event) => {
       if (districtRef.current && !districtRef.current.contains(event.target)) {
         setShowDistrictDropdown(false);
+      }
+      if (placeRef.current && !placeRef.current.contains(event.target)) {
+        setShowPlacesDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -2097,9 +2133,55 @@ function AntiDrugForm() {
                 <span>
                   Place / Town <span className="tamil-badge">ஊர் / நகரம்</span> <span className="required-marker">*</span>
                 </span>
-                <div className={`input-wrapper ${fieldErrors.place ? 'input-error' : ''}`}>
+                <div className={`input-wrapper ${fieldErrors.place ? 'input-error' : ''}`} ref={placeRef} style={{ position: 'relative', overflow: 'visible' }}>
                   <div className="input-icon"><i className="bi bi-building"></i></div>
-                  <input type="text" name="place" value={formData.place} onChange={handleChange} placeholder="Enter village, area or city / கிராமம், பகுதி அல்லது ஊர்" />
+                  <input
+                    type="text"
+                    name="place"
+                    value={formData.place}
+                    onChange={handleChange}
+                    onFocus={async () => {
+                      const latestPlaces = await fetchPlaces();
+                      const currentAvailablePlaces = latestPlaces[formData.district] || [];
+                      setFilteredPlaces(currentAvailablePlaces.filter(p => p.toLowerCase().includes(formData.place.toLowerCase())));
+                      setShowPlacesDropdown(true);
+                    }}
+                    placeholder="Enter village, area or city / கிராமம், பகுதி அல்லது ஊர்"
+                    autoComplete="off"
+                    style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', border: 'none', background: 'transparent', outline: 'none' }}
+                  />
+                  
+                  {/* Dropdown for Places */}
+                  {showPlacesDropdown && filteredPlaces.length > 0 && (
+                    <div className="district-dropdown" style={{
+                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+                      background: '#fff', borderRadius: '0.75rem', marginTop: '0.5rem',
+                      boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+                      border: '1px solid rgba(16, 185, 129, 0.2)', maxHeight: '250px',
+                      overflowY: 'auto'
+                    }}>
+                      {filteredPlaces.map((place, index) => (
+                        <div
+                          key={index}
+                          className="district-option"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, place: place }));
+                            setShowPlacesDropdown(false);
+                          }}
+                          style={{
+                            padding: '0.75rem 1rem', display: 'flex', alignItems: 'center',
+                            gap: '0.75rem', cursor: 'pointer', transition: 'all 0.2s ease',
+                            borderBottom: index < filteredPlaces.length - 1 ? '1px solid #f1f5f9' : 'none'
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#ecfdf5'; e.currentTarget.style.color = '#059669'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#334155'; }}
+                        >
+                          <i className="bi bi-geo-alt" style={{ color: '#10b981', opacity: 0.8 }}></i>
+                          <span style={{ fontWeight: 500 }}>{place}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {fieldErrors.place && <div className="field-error-message">{fieldErrors.place}</div>}
               </label>

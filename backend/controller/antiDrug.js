@@ -284,7 +284,7 @@ exports.incrementVisitorCount = async (req, res) => {
     const record = await VisitorCount.findOneAndUpdate(
       {},
       { $inc: { count: 1 } },
-      { new: true, upsert: true }
+      { returnDocument: 'after', upsert: true }
     );
 
     return res.status(200).json({
@@ -315,6 +315,38 @@ exports.getVisitorCount = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch visitor count.",
+      error: error.message
+    });
+  }
+};
+
+// Get Unique Places Grouped by District
+exports.getPlacesByDistrict = async (req, res) => {
+  try {
+    const submissions = await AntiDrug.find({}, 'district place').lean();
+    const placesDict = {};
+    
+    submissions.forEach(sub => {
+      if (sub.district && sub.place && sub.place.trim() !== '') {
+        if (!placesDict[sub.district]) placesDict[sub.district] = new Set();
+        placesDict[sub.district].add(sub.place.trim());
+      }
+    });
+    
+    const formattedDict = {};
+    for (let dist in placesDict) {
+      formattedDict[dist] = [...placesDict[dist]].sort((a, b) => a.localeCompare(b));
+    }
+    
+    return res.status(200).json({
+      success: true,
+      data: formattedDict
+    });
+  } catch (error) {
+    console.error("Error fetching Anti-Drug places:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch Anti-Drug places.",
       error: error.message
     });
   }
