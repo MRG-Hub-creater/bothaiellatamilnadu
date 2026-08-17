@@ -2133,7 +2133,7 @@ function AntiDrugForm() {
                 <span>
                   Place / Town <span className="tamil-badge">ஊர் / நகரம்</span> <span className="required-marker">*</span>
                 </span>
-                <div className={`input-wrapper ${fieldErrors.place ? 'input-error' : ''}`} ref={placeRef} style={{ position: 'relative', overflow: 'visible' }}>
+                <div className={`input-wrapper ${fieldErrors.place ? 'input-error' : ''}`} ref={placeRef} style={{ position: 'relative', overflow: 'visible', zIndex: 100 }}>
                   <div className="input-icon"><i className="bi bi-building"></i></div>
                   <input
                     type="text"
@@ -2154,7 +2154,7 @@ function AntiDrugForm() {
                   {/* Dropdown for Places */}
                   {showPlacesDropdown && filteredPlaces.length > 0 && (
                     <div className="district-dropdown" style={{
-                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 9999,
                       background: '#fff', borderRadius: '0.75rem', marginTop: '0.5rem',
                       boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
                       border: '1px solid rgba(16, 185, 129, 0.2)', maxHeight: '250px',
